@@ -54,7 +54,7 @@ def mongo_test():
     fetches the first document from the 'test' database and 'test' collection,
     and returns it as JSON.
     """
-    mongo_uri = "mongodb+srv://dev:57xg9ejuOLw7aSFP@laserdatacluster.dihytwb.mongodb.net/?retryWrites=true&w=majority&appName=laserDataCluster"
+     mongo_uri = ""
     if not mongo_uri:
         logger.error("MONGODB_URI environment variable not set.")
         return jsonify({"error": "MONGODB_URI environment variable not set."}), 500
