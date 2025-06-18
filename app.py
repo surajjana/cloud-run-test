@@ -16,7 +16,9 @@ import signal
 import sys
 from types import FrameType
 
-from flask import Flask
+from flask import Flask, jsonify
+from pymongo import MongoClient
+import os
 
 from utils.logging import logger
 
@@ -33,6 +35,7 @@ def hello() -> str:
 
     return "Hello, World!"
 
+
 @app.route("/test")
 def test() -> str:
     # Use basic logging with custom fields
@@ -42,6 +45,32 @@ def test() -> str:
     logger.info("Child logger with trace Id.")
 
     return "GCR Test!"
+
+
+@app.route("/mongo-test")
+def mongo_test():
+    """
+    Connects to a MongoDB Atlas cluster using the MONGODB_URI environment variable,
+    fetches the first document from the 'test' database and 'test' collection,
+    and returns it as JSON.
+    """
+    mongo_uri = "mongodb+srv://dev:57xg9ejuOLw7aSFP@laserdatacluster.dihytwb.mongodb.net/?retryWrites=true&w=majority&appName=laserDataCluster"
+    if not mongo_uri:
+        logger.error("MONGODB_URI environment variable not set.")
+        return jsonify({"error": "MONGODB_URI environment variable not set."}), 500
+
+    try:
+        client = MongoClient(mongo_uri)
+        db = client.get_database("laserUser")
+        collection = db.get_collection("users")
+        doc = collection.find_one()
+        client.close()
+        if doc:
+            doc["_id"] = str(doc["_id"])  # Convert ObjectId to string for JSON serialization
+        return jsonify(doc if doc else {"message": "No documents found."})
+    except Exception as e:
+        logger.error(f"MongoDB connection failed: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 def shutdown_handler(signal_int: int, frame: FrameType) -> None:
